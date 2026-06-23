@@ -1,0 +1,6 @@
+export enum FileStatus {
+  TRANSCRIBING = 'TRANSCRIBING',
+  UPLOADING = 'UPLOADING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}

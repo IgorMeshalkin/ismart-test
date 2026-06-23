@@ -1,0 +1,83 @@
+@mixin flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin fullScreenFlexCenter {
+  @include flexCenter;
+  height: 100svh;
+  width: 100vw;
+}
+
+@mixin appear {
+  opacity: 0;
+  scale: .9;
+  animation: appear .6s ease forwards;
+}
+
+@mixin dropTop {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: dropTop .6s ease forwards;
+}
+
+@mixin blink {
+  animation: blink 1.5s ease infinite;
+}
+
+@mixin scrollY {
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--dark-muted);
+    border-radius: 0.2rem;
+
+    &:hover {
+      background: var(--muted);
+    }
+  }
+}
+
+@mixin scrollItemBackground {
+  background: linear-gradient(
+                  to bottom,
+                  rgb(from var(--dark-muted) r g b / 0.1),
+                  rgb(from var(--muted) r g b / 0.1),
+                  rgb(from var(--dark-muted) r g b / 0.1)
+  );
+}
+
+@keyframes appear {
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes dropTop {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: .7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+
+

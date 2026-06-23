@@ -1,0 +1,4 @@
+@mixin page-shell {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+}

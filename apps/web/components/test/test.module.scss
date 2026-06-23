@@ -1,0 +1,35 @@
+@use '../../styles/mixins' as mixins;
+
+.shell {
+  @include mixins.page-shell;
+  display: grid;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.description {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}

@@ -1,0 +1,41 @@
+{
+  "name": "ismart",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/transcriber",
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:api": "npm run build --workspace @ismart/api",
+    "build:transcriber": "npm run build --workspace @ismart/transcriber",
+    "build:web": "npm run build --workspace @ismart/web",
+    "start:api": "npm run start --workspace @ismart/api",
+    "start:transcriber": "npm run start --workspace @ismart/transcriber",
+    "start:web": "npm run start --workspace @ismart/web",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "sass": "^1.83.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.2"
+  }
+}

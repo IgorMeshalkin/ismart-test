@@ -1,0 +1,57 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@shared": [
+        "../../libs/shared/src/index.ts"
+      ],
+      "@shared/*": [
+        "../../libs/shared/src/*"
+      ],
+      "@entities": [
+        "../../libs/shared/src/entities/index.ts"
+      ],
+      "@entities/*": [
+        "../../libs/shared/src/entities/*"
+      ],
+      "@dto": [
+        "../../libs/shared/src/dto/index.ts"
+      ],
+      "@dto/*": [
+        "../../libs/shared/src/dto/*"
+      ]
+    },
+    "resolveJsonModule": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../libs/shared/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,32 @@
+.main {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.text {
+  font-size: 3rem;
+}
+
+.button {
+  font-size: 1.5rem;
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  border: 1px solid var(--text);
+  cursor: pointer;
+  opacity: .85;
+  transition: opacity .2s ease;
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover {
+    opacity: 1;
+  }
+}

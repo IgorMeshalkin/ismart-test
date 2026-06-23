@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@shared": ["libs/shared/src/index.ts"],
+      "@shared/*": ["libs/shared/src/*"],
+      "@entities": ["libs/shared/src/entities/index.ts"],
+      "@entities/*": ["libs/shared/src/entities/*"],
+      "@dto": ["libs/shared/src/dto/index.ts"],
+      "@dto/*": ["libs/shared/src/dto/*"]
+    },
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
