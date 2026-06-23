@@ -346,10 +346,17 @@ GET /files/:id/status
 GET /files/:id/transcript
 ```
 
-`GET /files/:id/status` возвращает текущий статус File.
+`GET /files/:id/status` возвращает текущий статус File и флаг `isTextUploaded`:
 
-`GET /files/:id/transcript` доступен только после перехода File в `COMPLETED`.
-API читает текстовую транскрипцию из Object Storage по ключу `text-<file-id>` и возвращает текст Frontend.
+```ts
+{ fileId: string; status: FileStatus; isTextUploaded: boolean }
+```
+
+Frontend использует `isTextUploaded === true` как сигнал готовности текста, а не только `status === COMPLETED`.
+
+`GET /files/:id/transcript` доступен только при `isTextUploaded === true`.
+API генерирует presigned GET URL для объекта `text-<file-id>` в Object Storage и возвращает его Frontend.
+Frontend самостоятельно загружает текст по этому URL и отображает его на экране.
 
 WebSocket, Server-Sent Events и push-обновления не входят в MVP.
 

@@ -175,6 +175,7 @@ type File = BaseEntity & {
   sizeBytes: number;
   status: FileStatus;
   authorId: string;
+  isTextUploaded: boolean;
 };
 ```
 
@@ -206,7 +207,10 @@ File создаётся после проверки активного UserPlan.
 После создания File получает статус UPLOADING.
 Статус UPLOADING означает, что система ожидает загрузку исходного аудио в Object Storage.
 После подтверждения загрузки исходного аудио File получает статус TRANSCRIBING.
+После успешной транскрибации Transcription Service загружает текстовый файл в Object Storage и уведомляет API через Kafka.
+API устанавливает isTextUploaded = true после получения успешного результата из Kafka и подтверждения загрузки текста в Object Storage.
 После успешной транскрибации и сохранения текстовой транскрипции File получает статус COMPLETED.
+isTextUploaded = true только при статусе COMPLETED; при FAILED остаётся false.
 После перехода File в COMPLETED резерв лимитов снимается и окончательно списывается из remainingSeconds и remainingStorageBytes.
 При ошибке транскрибации или загрузки File получает статус FAILED.
 При переходе File в FAILED резерв лимитов снимается без окончательного списания.
