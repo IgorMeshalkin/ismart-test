@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, SyntheticEvent, useEffect, useRef, useState } from 'react';
 import styles from './audio-input.module.scss';
 
 type Mode = 'record' | 'upload';
@@ -17,6 +17,8 @@ export function AudioInputComponent() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const durationFixAppliedRef = useRef(false);
 
   // Upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -43,6 +45,7 @@ export function AudioInputComponent() {
     setSeconds(0);
     setUploadedFile(null);
     setUploadUrl(null);
+    durationFixAppliedRef.current = false;
     setMode(next);
   };
 
@@ -89,6 +92,7 @@ export function AudioInputComponent() {
     setRecordState('idle');
     setSeconds(0);
     setMicError(null);
+    durationFixAppliedRef.current = false;
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +107,29 @@ export function AudioInputComponent() {
     if (uploadUrl) URL.revokeObjectURL(uploadUrl);
     setUploadedFile(null);
     setUploadUrl(null);
+  };
+
+  // Workaround: MediaRecorder WebM blobs often lack a total-duration field in the
+  // stream header, so the browser reports duration=0 or Infinity until playback
+  // reaches the end. Setting currentTime to a very large value forces the browser
+  // to seek to the real end, decoding the true duration. We then reset currentTime
+  // to 0 so the player is ready from the beginning.
+  const handleRecordedAudioMetadata = (e: SyntheticEvent<HTMLAudioElement>) => {
+    const audio = e.currentTarget;
+    if (!isFinite(audio.duration) || audio.duration === 0) {
+      audio.currentTime = 1e100;
+    }
+  };
+
+  const handleRecordedAudioTimeUpdate = (e: SyntheticEvent<HTMLAudioElement>) => {
+    if (durationFixAppliedRef.current) return;
+    const audio = e.currentTarget;
+    // After the seek to 1e100 the browser clamps currentTime to the real end,
+    // making duration finite. Reset to the start once, then stop interfering.
+    if (isFinite(audio.duration) && audio.duration > 0) {
+      durationFixAppliedRef.current = true;
+      audio.currentTime = 0;
+    }
   };
 
   const formatTime = (s: number) => {
@@ -155,7 +182,14 @@ export function AudioInputComponent() {
 
           {recordState === 'done' && audioUrl && (
             <div className={styles.previewState}>
-              <audio className={styles.player} controls src={audioUrl} />
+              <audio
+                ref={audioRef}
+                className={styles.player}
+                controls
+                src={audioUrl}
+                onLoadedMetadata={handleRecordedAudioMetadata}
+                onTimeUpdate={handleRecordedAudioTimeUpdate}
+              />
               <button className={styles.secondaryButton} type="button" onClick={discardRecording}>
                 Discard
               </button>
