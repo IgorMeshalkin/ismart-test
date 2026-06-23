@@ -1,13 +1,23 @@
-@use '../../styles/mixins' as mixins;
-
 .shell {
-  @include mixins.page-shell;
-  display: grid;
-  gap: 24px;
-  padding: 48px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--background);
 }
 
-.header {
+.card {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+  display: grid;
+  gap: 24px;
+}
+
+.cardHeader {
   display: grid;
   gap: 8px;
 }
@@ -15,108 +25,110 @@
 .eyebrow {
   margin: 0;
   color: var(--accent);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .title {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.75rem;
   line-height: 1.2;
-}
-
-.muted {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.authGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.panel {
-  display: grid;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  padding: 24px;
-}
-
-.panelTitle {
-  margin: 0;
-  font-size: 1.25rem;
 }
 
 .form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .field {
   display: grid;
   gap: 6px;
-  font-size: 0.925rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .input {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
   color: var(--foreground);
   font: inherit;
+  font-weight: 400;
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
 .button {
+  width: 100%;
   border: 0;
-  border-radius: 6px;
+  border-radius: 12px;
   background: var(--accent);
   color: #fff;
   cursor: pointer;
   font: inherit;
+  font-size: 0.9375rem;
   font-weight: 700;
-  padding: 12px 16px;
+  padding: 13px 16px;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  margin-top: 4px;
+}
+
+.button:hover:not(:disabled) {
+  background: #0d6b63;
+}
+
+.button:active:not(:disabled) {
+  background: #0b5e57;
 }
 
 .button:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.secondaryButton {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--foreground);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 12px 16px;
+  opacity: 0.65;
 }
 
 .error {
   margin: 0;
   color: #b42318;
+  font-size: 0.875rem;
   line-height: 1.4;
 }
 
-.homePanel {
-  display: grid;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  padding: 24px;
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 720px) {
-  .authGrid {
-    grid-template-columns: 1fr;
-  }
+.toggleText {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toggleButton:hover {
+  opacity: 0.8;
 }

@@ -1,12 +1,15 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import type { AuthResponseDto, AuthUserDto } from '@dto';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { AuthResponseDto } from '@dto';
 import { useAuthApi } from '@/hooks/useAuthApi';
 import styles from './auth-home.module.scss';
 
 const ACCESS_TOKEN_KEY = 'ismart.accessToken';
 const USER_KEY = 'ismart.user';
+
+type Mode = 'login' | 'register';
 
 type RegisterFormState = {
   firstName: string;
@@ -21,6 +24,7 @@ type LoginFormState = {
 };
 
 export function AuthHomeComponent() {
+  const router = useRouter();
   const {
     register,
     login,
@@ -29,7 +33,8 @@ export function AuthHomeComponent() {
     registerError,
     loginError,
   } = useAuthApi();
-  const [user, setUser] = useState<AuthUserDto | null>(null);
+
+  const [mode, setMode] = useState<Mode>('login');
   const [registerForm, setRegisterForm] = useState<RegisterFormState>({
     firstName: '',
     lastName: '',
@@ -41,150 +46,39 @@ export function AuthHomeComponent() {
     password: '',
   });
 
-  useEffect(() => {
-    const storedUser = window.localStorage.getItem(USER_KEY);
-    const storedAccessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY);
-
-    if (storedUser && storedAccessToken) {
-      setUser(JSON.parse(storedUser) as AuthUserDto);
-    }
-  }, []);
-
   const submitRegister = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const response = await register(registerForm);
-
     storeAuth(response);
-    setUser(response.user);
+    router.push('/files');
   };
 
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const response = await login(loginForm);
-
     storeAuth(response);
-    setUser(response.user);
+    router.push('/files');
   };
-
-  const logout = () => {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(USER_KEY);
-    setUser(null);
-  };
-
-  if (user) {
-    return (
-      <main className={styles.shell}>
-        <section className={styles.homePanel}>
-          <div className={styles.header}>
-            <p className={styles.eyebrow}>iSmart</p>
-            <h1 className={styles.title}>You successfully logged in to the application.</h1>
-            <p className={styles.muted}>
-              Signed in as {user.firstName} {user.lastName} ({user.email}).
-            </p>
-          </div>
-          <button className={styles.secondaryButton} type="button" onClick={logout}>
-            Logout
-          </button>
-        </section>
-      </main>
-    );
-  }
 
   return (
-    <main className={styles.shell}>
-      <header className={styles.header}>
-        <p className={styles.eyebrow}>iSmart</p>
-        <h1 className={styles.title}>Authentication</h1>
-        <p className={styles.muted}>Create an account or sign in to continue.</p>
-      </header>
+    <div className={styles.shell}>
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <p className={styles.eyebrow}>iSmart</p>
+          <h1 className={styles.title}>
+            {mode === 'login' ? 'Sign in' : 'Create account'}
+          </h1>
+        </div>
 
-      <section className={styles.authGrid}>
-        <article className={styles.panel}>
-          <h2 className={styles.panelTitle}>Register</h2>
-          <form className={styles.form} onSubmit={submitRegister}>
-            <label className={styles.field}>
-              First name
-              <input
-                className={styles.input}
-                name="firstName"
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    firstName: event.target.value,
-                  }))
-                }
-                required
-                value={registerForm.firstName}
-              />
-            </label>
-            <label className={styles.field}>
-              Last name
-              <input
-                className={styles.input}
-                name="lastName"
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    lastName: event.target.value,
-                  }))
-                }
-                required
-                value={registerForm.lastName}
-              />
-            </label>
-            <label className={styles.field}>
-              Email
-              <input
-                className={styles.input}
-                name="email"
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                required
-                type="email"
-                value={registerForm.email}
-              />
-            </label>
-            <label className={styles.field}>
-              Password
-              <input
-                className={styles.input}
-                name="password"
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
-                }
-                required
-                type="password"
-                value={registerForm.password}
-              />
-            </label>
-            {registerError ? <p className={styles.error}>{registerError}</p> : null}
-            <button className={styles.button} disabled={isRegisterLoading} type="submit">
-              {isRegisterLoading ? 'Creating account' : 'Create account'}
-            </button>
-          </form>
-        </article>
-
-        <article className={styles.panel}>
-          <h2 className={styles.panelTitle}>Login</h2>
+        {mode === 'login' ? (
           <form className={styles.form} onSubmit={submitLogin}>
             <label className={styles.field}>
               Email
               <input
                 className={styles.input}
                 name="email"
-                onChange={(event) =>
-                  setLoginForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
+                onChange={(e) =>
+                  setLoginForm((c) => ({ ...c, email: e.target.value }))
                 }
                 required
                 type="email"
@@ -196,11 +90,8 @@ export function AuthHomeComponent() {
               <input
                 className={styles.input}
                 name="password"
-                onChange={(event) =>
-                  setLoginForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
+                onChange={(e) =>
+                  setLoginForm((c) => ({ ...c, password: e.target.value }))
                 }
                 required
                 type="password"
@@ -209,12 +100,95 @@ export function AuthHomeComponent() {
             </label>
             {loginError ? <p className={styles.error}>{loginError}</p> : null}
             <button className={styles.button} disabled={isLoginLoading} type="submit">
-              {isLoginLoading ? 'Signing in' : 'Sign in'}
+              {isLoginLoading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-        </article>
-      </section>
-    </main>
+        ) : (
+          <form className={styles.form} onSubmit={submitRegister}>
+            <label className={styles.field}>
+              First name
+              <input
+                className={styles.input}
+                name="firstName"
+                onChange={(e) =>
+                  setRegisterForm((c) => ({ ...c, firstName: e.target.value }))
+                }
+                required
+                value={registerForm.firstName}
+              />
+            </label>
+            <label className={styles.field}>
+              Last name
+              <input
+                className={styles.input}
+                name="lastName"
+                onChange={(e) =>
+                  setRegisterForm((c) => ({ ...c, lastName: e.target.value }))
+                }
+                required
+                value={registerForm.lastName}
+              />
+            </label>
+            <label className={styles.field}>
+              Email
+              <input
+                className={styles.input}
+                name="email"
+                onChange={(e) =>
+                  setRegisterForm((c) => ({ ...c, email: e.target.value }))
+                }
+                required
+                type="email"
+                value={registerForm.email}
+              />
+            </label>
+            <label className={styles.field}>
+              Password
+              <input
+                className={styles.input}
+                name="password"
+                onChange={(e) =>
+                  setRegisterForm((c) => ({ ...c, password: e.target.value }))
+                }
+                required
+                type="password"
+                value={registerForm.password}
+              />
+            </label>
+            {registerError ? <p className={styles.error}>{registerError}</p> : null}
+            <button className={styles.button} disabled={isRegisterLoading} type="submit">
+              {isRegisterLoading ? 'Creating account…' : 'Create account'}
+            </button>
+          </form>
+        )}
+
+        <div className={styles.toggle}>
+          {mode === 'login' ? (
+            <>
+              <span className={styles.toggleText}>Don&apos;t have an account?</span>
+              <button
+                className={styles.toggleButton}
+                type="button"
+                onClick={() => setMode('register')}
+              >
+                Create account
+              </button>
+            </>
+          ) : (
+            <>
+              <span className={styles.toggleText}>Already have an account?</span>
+              <button
+                className={styles.toggleButton}
+                type="button"
+                onClick={() => setMode('login')}
+              >
+                Sign in
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
