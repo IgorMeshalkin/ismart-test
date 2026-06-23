@@ -1,11 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from './sidebar.module.scss';
 
 export function SidebarComponent() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('ismart.accessToken');
+    router.push('/');
+  };
 
   return (
     <nav className={styles.sidebar}>
@@ -24,12 +30,9 @@ export function SidebarComponent() {
         </Link>
       </div>
       <div className={styles.bottom}>
-        <Link
-          href="/profile"
-          className={`${styles.profileButton} ${pathname.startsWith('/profile') ? styles.active : ''}`}
-        >
-          Profile
-        </Link>
+        <button className={styles.logoutButton} type="button" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
     </nav>
   );

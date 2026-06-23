@@ -1,4 +1,43 @@
 services:
+  kafka-init:
+    image: apache/kafka:3.8.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic transcription.jobs --partitions 1 --replication-factor 1
+      "
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${CLOUD_STORAGE_ACCESS_KEY_ID:-minio_access_key}
+      MINIO_ROOT_PASSWORD: ${CLOUD_STORAGE_SECRET_ACCESS_KEY:-minio_secret_key}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${CLOUD_STORAGE_ACCESS_KEY_ID:-minio_access_key} ${CLOUD_STORAGE_SECRET_ACCESS_KEY:-minio_secret_key};
+      mc mb --ignore-existing local/${CLOUD_STORAGE_BUCKET_NAME:-ismart-audio};
+      mc anonymous set public local/${CLOUD_STORAGE_BUCKET_NAME:-ismart-audio};
+      "
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -17,8 +56,16 @@ services:
 
   kafka:
     image: apache/kafka:3.8.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
     environment:
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_LOG4J_LOGGERS: "kafka=WARN,kafka.controller=WARN,kafka.log.LogCleaner=WARN,state.change.logger=WARN,kafka.producer.async.DefaultEventHandler=WARN"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+      KAFKA_TOOLS_LOG4J_LOGLEVEL: WARN
       KAFKA_NODE_ID: "1"
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
@@ -51,6 +98,11 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
       FRONTEND_ORIGIN: http://localhost:${WEB_PORT:-3000}
+      CLOUD_STORAGE_ENDPOINT_URL: ${CLOUD_STORAGE_ENDPOINT_URL:-http://minio:9000}
+      CLOUD_STORAGE_PUBLIC_URL: ${CLOUD_STORAGE_PUBLIC_URL:-http://localhost:9000}
+      CLOUD_STORAGE_BUCKET_NAME: ${CLOUD_STORAGE_BUCKET_NAME:-ismart-audio}
+      CLOUD_STORAGE_ACCESS_KEY_ID: ${CLOUD_STORAGE_ACCESS_KEY_ID:-minio_access_key}
+      CLOUD_STORAGE_SECRET_ACCESS_KEY: ${CLOUD_STORAGE_SECRET_ACCESS_KEY:-minio_secret_key}
     ports:
       - "${API_PORT:-8080}:${API_PORT:-8080}"
     depends_on:
@@ -58,6 +110,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT}/healthcheck | grep -q 'This is a api'"]
       interval: 10s
@@ -73,11 +127,17 @@ services:
       PORT: ${TRANSCRIBER_PORT:-8081}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
       FRONTEND_ORIGIN: http://localhost:${WEB_PORT:-3000}
+      CLOUD_STORAGE_ENDPOINT_URL: ${CLOUD_STORAGE_ENDPOINT_URL:-http://minio:9000}
+      CLOUD_STORAGE_BUCKET_NAME: ${CLOUD_STORAGE_BUCKET_NAME:-ismart-audio}
+      CLOUD_STORAGE_ACCESS_KEY_ID: ${CLOUD_STORAGE_ACCESS_KEY_ID:-minio_access_key}
+      CLOUD_STORAGE_SECRET_ACCESS_KEY: ${CLOUD_STORAGE_SECRET_ACCESS_KEY:-minio_secret_key}
     ports:
       - "${TRANSCRIBER_PORT:-8081}:${TRANSCRIBER_PORT:-8081}"
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT}/healthcheck | grep -q 'This is a transcriber'"]
       interval: 10s
@@ -106,3 +166,4 @@ services:
 
 volumes:
   postgres_data:
+  minio_data:

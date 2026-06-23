@@ -2,9 +2,11 @@
 
 import { ChangeEvent, SyntheticEvent, useEffect, useRef, useState } from 'react';
 import styles from './audio-input.module.scss';
+import { useFilesApi } from '../../hooks/useFilesApi';
 
 type Mode = 'record' | 'upload';
 type RecordState = 'idle' | 'recording' | 'done';
+type SendState = 'idle' | 'sending' | 'done' | 'error';
 
 export function AudioInputComponent() {
   const [mode, setMode] = useState<Mode>('record');
@@ -18,11 +20,21 @@ export function AudioInputComponent() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recordedBlobRef = useRef<Blob | null>(null);
   const durationFixAppliedRef = useRef(false);
 
   // Upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
+  const [audioDuration, setAudioDuration] = useState(0);
+
+  // Send state
+  const [sendState, setSendState] = useState<SendState>('idle');
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sentFileId, setSentFileId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const { createFile, confirmUpload } = useFilesApi();
 
   useEffect(() => {
     return () => {
@@ -32,9 +44,31 @@ export function AudioInputComponent() {
     };
   }, [audioUrl, uploadUrl]);
 
+  const resetSendState = () => {
+    setSendState('idle');
+    setSendError(null);
+    setSentFileId(null);
+    setUploadProgress(0);
+  };
+
+  const xhrPut = (url: string, blob: Blob, mimeType: string): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload failed with status ${xhr.status}`));
+      };
+      xhr.onerror = () => reject(new Error('Upload failed'));
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', mimeType);
+      xhr.send(blob);
+    });
+
   const switchMode = (next: Mode) => {
     if (next === mode) return;
-    // Stop any active recording
     if (mediaRecorderRef.current && recordState === 'recording') {
       mediaRecorderRef.current.stop();
     }
@@ -45,7 +79,10 @@ export function AudioInputComponent() {
     setSeconds(0);
     setUploadedFile(null);
     setUploadUrl(null);
+    setAudioDuration(0);
+    recordedBlobRef.current = null;
     durationFixAppliedRef.current = false;
+    resetSendState();
     setMode(next);
   };
 
@@ -63,6 +100,7 @@ export function AudioInputComponent() {
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        recordedBlobRef.current = blob;
         setAudioUrl(URL.createObjectURL(blob));
         setRecordState('done');
         if (timerRef.current) clearInterval(timerRef.current);
@@ -92,7 +130,9 @@ export function AudioInputComponent() {
     setRecordState('idle');
     setSeconds(0);
     setMicError(null);
+    recordedBlobRef.current = null;
     durationFixAppliedRef.current = false;
+    resetSendState();
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -101,19 +141,18 @@ export function AudioInputComponent() {
     if (uploadUrl) URL.revokeObjectURL(uploadUrl);
     setUploadedFile(file);
     setUploadUrl(URL.createObjectURL(file));
+    setAudioDuration(0);
+    resetSendState();
   };
 
   const clearFile = () => {
     if (uploadUrl) URL.revokeObjectURL(uploadUrl);
     setUploadedFile(null);
     setUploadUrl(null);
+    setAudioDuration(0);
+    resetSendState();
   };
 
-  // Workaround: MediaRecorder WebM blobs often lack a total-duration field in the
-  // stream header, so the browser reports duration=0 or Infinity until playback
-  // reaches the end. Setting currentTime to a very large value forces the browser
-  // to seek to the real end, decoding the true duration. We then reset currentTime
-  // to 0 so the player is ready from the beginning.
   const handleRecordedAudioMetadata = (e: SyntheticEvent<HTMLAudioElement>) => {
     const audio = e.currentTarget;
     if (!isFinite(audio.duration) || audio.duration === 0) {
@@ -124,11 +163,62 @@ export function AudioInputComponent() {
   const handleRecordedAudioTimeUpdate = (e: SyntheticEvent<HTMLAudioElement>) => {
     if (durationFixAppliedRef.current) return;
     const audio = e.currentTarget;
-    // After the seek to 1e100 the browser clamps currentTime to the real end,
-    // making duration finite. Reset to the start once, then stop interfering.
     if (isFinite(audio.duration) && audio.duration > 0) {
       durationFixAppliedRef.current = true;
       audio.currentTime = 0;
+    }
+  };
+
+  const handleUploadAudioMetadata = (e: SyntheticEvent<HTMLAudioElement>) => {
+    setAudioDuration(e.currentTarget.duration);
+  };
+
+  const handleSend = async () => {
+    if (!localStorage.getItem('ismart.accessToken')) {
+      setSendError('You must be logged in to send a file.');
+      setSendState('error');
+      return;
+    }
+
+    setSendState('sending');
+    setSendError(null);
+    setSentFileId(null);
+    setUploadProgress(0);
+
+    try {
+      let blob: Blob;
+      let metadata: { originalName: string; durationSeconds: number; sizeBytes: number };
+      let mimeType: string;
+
+      if (mode === 'record') {
+        blob = recordedBlobRef.current!;
+        mimeType = blob.type || 'audio/webm';
+        metadata = {
+          originalName: 'recording.webm',
+          durationSeconds: seconds,
+          sizeBytes: blob.size,
+        };
+      } else {
+        blob = uploadedFile!;
+        mimeType = blob.type || 'audio/webm';
+        metadata = {
+          originalName: uploadedFile!.name,
+          durationSeconds: Math.round(audioDuration),
+          sizeBytes: uploadedFile!.size,
+        };
+      }
+
+      const { fileId, uploadUrl: presignedUrl } = await createFile(metadata);
+
+      await xhrPut(presignedUrl, blob, mimeType);
+
+      await confirmUpload(fileId);
+
+      setSentFileId(fileId);
+      setSendState('done');
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      setSendState('error');
     }
   };
 
@@ -137,6 +227,15 @@ export function AudioInputComponent() {
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
+
+  const isSending = sendState === 'sending';
+
+  const progressBar = isSending && uploadProgress > 0 && (
+    <div className={styles.uploadProgress}>
+      <div className={styles.uploadProgressBar} style={{ width: `${uploadProgress}%` }} />
+      <span className={styles.uploadProgressLabel}>Uploading… {uploadProgress}%</span>
+    </div>
+  );
 
   return (
     <div className={styles.card}>
@@ -190,6 +289,21 @@ export function AudioInputComponent() {
                 onLoadedMetadata={handleRecordedAudioMetadata}
                 onTimeUpdate={handleRecordedAudioTimeUpdate}
               />
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={handleSend}
+                disabled={isSending}
+              >
+                {isSending ? 'Sending…' : 'Send'}
+              </button>
+              {progressBar}
+              {sendState === 'done' && sentFileId && (
+                <p className={styles.success}>File sent. ID: {sentFileId}</p>
+              )}
+              {sendState === 'error' && sendError && (
+                <p className={styles.error}>{sendError}</p>
+              )}
               <button className={styles.secondaryButton} type="button" onClick={discardRecording}>
                 Discard
               </button>
@@ -213,7 +327,29 @@ export function AudioInputComponent() {
           ) : (
             <div className={styles.previewState}>
               <p className={styles.fileName}>{uploadedFile.name}</p>
-              {uploadUrl && <audio className={styles.player} controls src={uploadUrl} />}
+              {uploadUrl && (
+                <audio
+                  className={styles.player}
+                  controls
+                  src={uploadUrl}
+                  onLoadedMetadata={handleUploadAudioMetadata}
+                />
+              )}
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={handleSend}
+                disabled={isSending}
+              >
+                {isSending ? 'Sending…' : 'Send'}
+              </button>
+              {progressBar}
+              {sendState === 'done' && sentFileId && (
+                <p className={styles.success}>File sent. ID: {sentFileId}</p>
+              )}
+              {sendState === 'error' && sendError && (
+                <p className={styles.error}>{sendError}</p>
+              )}
               <button className={styles.secondaryButton} type="button" onClick={clearFile}>
                 Clear
               </button>

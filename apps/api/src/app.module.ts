@@ -14,6 +14,7 @@ import {
   UserPlanEntity,
 } from '@entities';
 import { AuthModule } from './auth/auth.module';
+import { FilesModule } from './files/files.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -56,6 +57,7 @@ import { AppController } from './app.controller';
       },
     }),
     AuthModule,
+    FilesModule,
   ],
   controllers: [AppController],
 })

@@ -47,23 +47,22 @@
   padding-top: 12px;
 }
 
-.profileButton {
+.logoutButton {
   display: block;
+  width: 100%;
   padding: 10px 14px;
+  border: none;
   border-radius: 8px;
-  text-decoration: none;
+  background: transparent;
   color: var(--foreground);
+  font: inherit;
   font-size: 0.9375rem;
   font-weight: 500;
+  text-align: left;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.profileButton:hover {
+.logoutButton:hover {
   background: rgba(0, 0, 0, 0.04);
-}
-
-.profileButton.active {
-  background: rgba(15, 118, 110, 0.08);
-  color: var(--accent);
-  font-weight: 600;
 }
