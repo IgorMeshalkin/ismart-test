@@ -354,7 +354,7 @@ Developer implements tasks.
 Developer updates:
 
 ```text
-/specs/ismart/progress/<phase>.md
+/specs/ismart/progress/YYYY-MM-DD-HHMM-<phase>.md
 /specs/ismart/phases/<phase>/tasks.md
 /specs/ismart/current-state/
 ```
@@ -372,7 +372,7 @@ QA validates implementation.
 QA creates:
 
 ```text
-/specs/ismart/reports/qa-phase-XX.md
+/specs/ismart/reports/YYYY-MM-DD-HHMM-qa-phase-XX.md
 ```
 
 QA marks Developer checklist items with `[✓]` or `[✗]`.
@@ -431,3 +431,123 @@ QA report
 ```
 
 A phase is not complete until all deliverables exist.
+
+---
+
+## 16. Bug Fix Workflow
+
+Bugs are tracked in `/specs/ismart/bugs/` and follow the same agent workflow as phases.
+
+### Bug Fix Lifecycle
+
+#### Step 1
+
+A bug report is created under:
+
+```text
+/specs/ismart/bugs/<bug-slug>.md
+```
+
+The bug report must contain: status, summary, error, observed behavior, expected behavior, and notes for the fix.
+
+#### Step 2
+
+Developer investigates and implements the fix.
+
+#### Step 3
+
+Developer creates a progress entry for the bug fix:
+
+```text
+/specs/ismart/progress/YYYY-MM-DD-HHMM-bug-<bug-slug>.md
+```
+
+The bug progress entry format must follow the same structure as phase progress entries.
+
+Example:
+
+```md
+## 2026-06-23 14:00 UTC
+
+Bug:
+api-runtime-cannot-find-entities-after-phase-02
+
+Status:
+Ready For QA
+
+Files Changed:
+- apps/api/package.json
+
+Implementation Checklist:
+- [ ] Identified root cause
+- [ ] Applied fix
+- [ ] Verified API starts successfully
+- [ ] Verified API runtime resolves shared aliases
+```
+
+Developer must leave checklist boxes empty. QA is responsible for marking pass or fail.
+
+#### Step 4
+
+Developer updates the bug report status to `Ready For QA`.
+
+#### Step 5
+
+QA validates the fix and creates a QA report:
+
+```text
+/specs/ismart/reports/YYYY-MM-DD-HHMM-qa-bug-<bug-slug>.md
+```
+
+QA marks Developer checklist items with `[✓]` or `[✗]`.
+
+#### Step 6
+
+If QA passes, Developer:
+
+- updates the bug report status to `Resolved`;
+- updates `/specs/ismart/current-state/current-state.md` if the fix affects the described runtime state.
+
+If QA fails, the fix is returned for rework.
+
+### Bug Fix Rules
+
+- A bug fix must not introduce new functionality beyond the fix scope.
+- A bug fix must not modify future phases or other bug reports.
+- The progress file and QA report are mandatory even for small fixes.
+- current-state must be updated if the fix changes the observable runtime behavior described there.
+
+---
+
+## 17. Progress And Report File Naming Convention
+
+All progress and report files must be named with a date-time prefix so they sort in chronological order.
+
+### Format
+
+```text
+YYYY-MM-DD-HHMM-<slug>.md
+```
+
+- `YYYY-MM-DD` — UTC date when the file was created.
+- `HHMM` — UTC time (hours and minutes, no separator) when the file was created.
+- `<slug>` — descriptive slug identifying the phase, bug, or report type.
+
+### Examples
+
+```text
+specs/ismart/progress/2026-06-23-0718-phase-01-project-foundation.md
+specs/ismart/progress/2026-06-23-0805-phase-02-auth-registration.md
+specs/ismart/progress/2026-06-23-0824-bug-api-runtime-cannot-find-entities-after-phase-02.md
+
+specs/ismart/reports/2026-06-23-0720-qa-phase-01.md
+specs/ismart/reports/2026-06-23-0728-lead-phase-01.md
+specs/ismart/reports/2026-06-23-0830-qa-bug-api-runtime-cannot-find-entities-after-phase-02.md
+```
+
+### Rules
+
+- The date-time prefix must match the UTC timestamp of the first entry in the file.
+- Never omit the prefix. Files without a prefix violate this convention.
+- When two files are created within the same minute, append a sequential suffix: `HHMM-1-<slug>.md`, `HHMM-2-<slug>.md`.
+- Do not rename existing files unless explicitly migrating to this convention.

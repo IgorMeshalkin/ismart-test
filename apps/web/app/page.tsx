@@ -1,5 +1,5 @@
-import { HomeComponent } from '@/components/test/home.component';
+import { AuthHomeComponent } from '@/components/auth/auth-home.component';
 
 export default function Page() {
-  return <HomeComponent appName="web" />;
+  return <AuthHomeComponent />;
 }

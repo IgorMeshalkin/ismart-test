@@ -37,7 +37,7 @@ When a skill conflicts with the approved phase scope, `phase.md`, `tasks.md`, an
 ## Task 01 - Configure API Database Access
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -66,7 +66,7 @@ Acceptance Criteria:
 ## Task 02 - Add Auth Dependencies And Environment Contract
 
 Status:
-Pending
+Completed
 
 Description:
 Add the runtime dependencies and environment examples required for password hashing and JWT issuing.
@@ -103,7 +103,7 @@ Acceptance Criteria:
 ## Task 03 - Create Auth DTOs
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -167,7 +167,7 @@ Acceptance Criteria:
 ## Task 04 - Create Auth Service
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -209,7 +209,7 @@ Acceptance Criteria:
 ## Task 05 - Create Auth Controller Endpoints
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -245,7 +245,7 @@ Acceptance Criteria:
 ## Task 06 - Add JWT Request Protection
 
 Status:
-Pending
+Completed
 
 Description:
 Create reusable JWT request protection for future API controllers.
@@ -301,7 +301,7 @@ Acceptance Criteria:
 ## Task 07 - Add Protected Auth Smoke Endpoint
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -334,7 +334,7 @@ Acceptance Criteria:
 ## Task 08 - Create Frontend Auth API Helper
 
 Status:
-Pending
+Completed
 
 Relevant Skills:
 
@@ -365,7 +365,7 @@ Acceptance Criteria:
 ## Task 09 - Create Registration And Login UI
 
 Status:
-Pending
+Completed
 
 Description:
 Create frontend registration and login forms.
@@ -406,7 +406,7 @@ Acceptance Criteria:
 ## Task 10 - Create Authenticated Home And Logout
 
 Status:
-Pending
+Completed
 
 Description:
 Create the minimal frontend home page used to verify login and logout.
@@ -436,7 +436,7 @@ Acceptance Criteria:
 ## Task 11 - Validate Phase 02
 
 Status:
-Pending
+Completed
 
 Description:
 Validate backend and frontend implementation.

@@ -660,7 +660,7 @@ Update project state and progress tracking after implementation.
 Required files:
 
 ```text
-specs/ismart/progress/phase-01-project-foundation.md
+specs/ismart/progress/2026-06-23-0718-phase-01-project-foundation.md
 specs/ismart/current-state/current-state.md
 ```
 

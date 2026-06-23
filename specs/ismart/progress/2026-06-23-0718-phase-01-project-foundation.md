@@ -25,8 +25,8 @@ Files Changed:
 - `libs/shared`
 - `specs/ismart/phases/phase-01-project-foundation/tasks.md`
 - `specs/ismart/current-state/current-state.md`
-- `specs/ismart/reports/qa-phase-01.md`
-- `specs/ismart/reports/lead-phase-01.md`
+- `specs/ismart/reports/2026-06-23-0720-qa-phase-01.md`
+- `specs/ismart/reports/2026-06-23-0728-lead-phase-01.md`
 
 Implementation Checklist:
 - [ ] Created monorepository directories for `apps`, `libs/shared`, progress, current-state, and reports.
